@@ -11,19 +11,23 @@
 
 ## 시작하기
 
-```bash
-npm install
-npm run dev
-```
+`build_for_program.bat` 파일을 더블클릭하면 자동으로 빌드가 진행됩니다.
+
+> 명령어를 직접 실행하려는 경우:
+> ```bash
+> npm install
+> npm run dev
+> ```
 
 ## 빌드
 
-```bash
-npm run build        # 타입체크 + 번들
-npm run dist         # 현재 OS용 패키징
-npm run dist:win     # Windows NSIS
-npm run dist:mac     # macOS DMG
-```
+`build_for_program.bat` 파일을 더블클릭하면 Windows 설치 파일(`.exe`)이 생성됩니다.
+빌드 완료 후 `release` 폴더가 자동으로 열립니다.
+
+> 명령어를 직접 실행하려는 경우:
+> ```bash
+> npm run dist:win
+> ```
 
 ## 저장소 설정 (MVP 기본값)
 - owner: `Arrru`
