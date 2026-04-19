@@ -7,17 +7,26 @@ echo   Build Start (Windows)
 echo  ================================
 echo.
 
-:: Check Node.js
+:: Check Node.js, auto-install if missing
 where npm >nul 2>&1
 if %errorlevel% neq 0 (
-    echo  [ERROR] Node.js is not installed.
+    echo  Node.js not found. Installing automatically...
+    echo  Please wait a moment.
     echo.
-    echo  Please install Node.js from the link below and try again.
-    echo  https://nodejs.org
+    winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
+    if %errorlevel% neq 0 (
+        echo  [ERROR] Auto-install failed.
+        echo  Please install Node.js manually: https://nodejs.org
+        start https://nodejs.org
+        pause
+        exit /b 1
+    )
+    echo  Node.js installed. Restarting script...
     echo.
-    start https://nodejs.org
-    pause
-    exit /b 1
+    :: Refresh PATH and restart
+    call refreshenv >nul 2>&1
+    start "" "%~f0"
+    exit /b 0
 )
 
 if not exist "node_modules" (
