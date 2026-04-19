@@ -14,18 +14,14 @@ if %errorlevel% neq 0 (
     echo  Please wait a moment.
     echo.
     winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
-    if %errorlevel% neq 0 (
-        echo  [ERROR] Auto-install failed.
-        echo  Please install Node.js manually: https://nodejs.org
-        start https://nodejs.org
-        pause
-        exit /b 1
-    )
-    echo  Node.js installed. Restarting script...
     echo.
-    :: Refresh PATH and restart
-    call refreshenv >nul 2>&1
-    start "" "%~f0"
+    echo  ================================
+    echo   Node.js installation complete!
+    echo   Please close this window and
+    echo   run this file again.
+    echo  ================================
+    echo.
+    pause
     exit /b 0
 )
 
