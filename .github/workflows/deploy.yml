@@ -1,0 +1,51 @@
+name: Godot Web Export & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/images/**'
+      - 'project/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-and-deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: '4.2.2'
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --import --quit-after 1000 || true
+
+      - name: Export Web
+        run: |
+          mkdir -p ./build/web
+          godot --headless --export-release "Web" ./build/web/index.html --path ./project
+
+      - name: Copy assets
+        run: cp -r ./assets ./build/web/assets
+
+      - name: Add .nojekyll
+        run: touch ./build/web/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
