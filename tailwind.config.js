@@ -7,15 +7,15 @@ export default {
         background: '#FAF7F2',
         surface: '#FFFFFF',
         primary: {
-          DEFAULT: '#7A9E7E',
-          hover: '#5C8060',
+          DEFAULT: '#7BBFCF',
+          hover: '#5AA3B7',
         },
         text: {
           primary: '#2C2C2C',
           secondary: '#8A8A8A',
         },
         border: '#E8E2D9',
-        success: '#7A9E7E',
+        success: '#7BBFCF',
         error: '#C97B7B',
         warning: '#C9A96E',
       },

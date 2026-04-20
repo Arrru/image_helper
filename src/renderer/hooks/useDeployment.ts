@@ -1,72 +1,11 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useAppStore } from '../store/appStore';
 import type { AppError, FileInputPayload } from '../../shared/types';
 
-/**
- * Central hook that wires up deploy progress/completion events to the store
- * and exposes a startDeploy function.
- */
+// Event subscriptions (onProgress / onComplete) are intentionally kept in App.tsx
+// so they survive when this hook's host component (<Main>) unmounts during deployment.
 export function useDeployment() {
-  const {
-    selectedFiles,
-    setDeployState,
-    setProgress,
-    setError,
-    setLastDeployment,
-    setHistory,
-  } = useAppStore();
-
-  // Subscribe to progress + complete events
-  useEffect(() => {
-    const offProgress = window.electronAPI.deploy.onProgress((p) => {
-      setProgress(p);
-      if (p.step === 'uploading') setDeployState('uploading');
-      else if (p.step === 'building' || p.step === 'deploying')
-        setDeployState('building');
-      else if (p.step === 'complete') setDeployState('success');
-      else if (p.step === 'failed') setDeployState('failed');
-    });
-
-    const offComplete = window.electronAPI.deploy.onComplete(async (r) => {
-      if (r.status === 'success') {
-        setDeployState('success');
-        setProgress({ step: 'complete', percent: 100, message: '완료!' });
-        setLastDeployment({
-          timestamp: r.timestamp,
-          status: 'success',
-          pagesUrl: r.pagesUrl,
-          commitSha: '',
-        });
-      } else {
-        setDeployState('failed');
-        const hint = r.timeoutReached
-          ? 'GitHub Actions 상태를 확인해 주세요.'
-          : '잠시 후 다시 시도해 주세요.';
-        setError({
-          title: r.timeoutReached
-            ? '시간이 너무 오래 걸리고 있어요'
-            : '배포에 실패했어요',
-          message: r.timeoutReached
-            ? '빌드가 아직 완료되지 않았어요. GitHub Actions에서 진행 상황을 확인해 주세요.'
-            : '게임 빌드에 실패했어요. 이전 버전은 그대로 유지됩니다.',
-          hint,
-        });
-      }
-
-      // Refresh history
-      try {
-        const h = await window.electronAPI.history.load();
-        setHistory(h);
-      } catch {
-        // ignore
-      }
-    });
-
-    return () => {
-      offProgress();
-      offComplete();
-    };
-  }, [setProgress, setDeployState, setError, setLastDeployment, setHistory]);
+  const { selectedFiles, setDeployState, setProgress, setError } = useAppStore();
 
   const startDeploy = useCallback(async () => {
     if (selectedFiles.length === 0) {
