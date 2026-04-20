@@ -41,11 +41,11 @@ if %errorlevel% neq 0 (
     if !errorlevel! neq 0 (
         echo.
         echo  ================================================
-        echo   Node.js 설치가 완료되었습니다.
+        echo   Node.js installation complete!
         echo.
-        echo   [2번 실행 필요]
-        echo   이 창을 닫은 후 build_for_program.bat 파일을
-        echo   다시 더블클릭하여 실행해 주세요.
+        echo   [ACTION REQUIRED - 2nd run needed]
+        echo   Close this window, then double-click
+        echo   build_for_program.bat to run again.
         echo  ================================================
         echo.
         pause
