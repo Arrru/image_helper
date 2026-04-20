@@ -1,7 +1,7 @@
 # Godot 배포 도우미
 
-디자이너 친화적인 이미지 배포 데스크탑 앱. 이미지를 업로드하면 GitHub 저장소에
-커밋/푸시하고 GitHub Actions 빌드를 감시해 자동으로 GitHub Pages에 배포합니다.
+이미지 배포 데스크탑 앱. 이미지를 업로드하면 GitHub 저장소에
+커밋/푸시하고 GitHub Actions 빌드를 감시해 자동으로 GitHub Pages(in dosa)에 배포합니다.
 
 ## 스택
 - Electron 28 + React 18 + TypeScript
