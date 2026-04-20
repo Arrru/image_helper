@@ -39,10 +39,14 @@ if %errorlevel% neq 0 (
     )
     where npm >nul 2>&1
     if !errorlevel! neq 0 (
-        echo  ================================
-        echo   Node.js installed!
-        echo   Please close and run again.
-        echo  ================================
+        echo.
+        echo  ================================================
+        echo   Node.js 설치가 완료되었습니다.
+        echo.
+        echo   [2번 실행 필요]
+        echo   이 창을 닫은 후 build_for_program.bat 파일을
+        echo   다시 더블클릭하여 실행해 주세요.
+        echo  ================================================
         echo.
         pause
         exit /b 0

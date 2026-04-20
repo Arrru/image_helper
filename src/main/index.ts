@@ -6,6 +6,16 @@ import { registerConfigIpc } from './ipc/config.ipc';
 import { registerDeployIpc, registerFileReadIpc } from './ipc/deploy.ipc';
 import { cancelAllPolling } from './services/poller.service';
 
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  try {
+    dialog.showErrorBox('오류 발생', `예기치 않은 오류가 발생했습니다.\n\n${error.message}`);
+  } catch {
+    // dialog unavailable before app ready
+  }
+  app.quit();
+});
+
 // Avoid multiple instances
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
