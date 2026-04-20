@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 title Build - Godot Deployer
 
 echo.
@@ -7,22 +8,47 @@ echo   Build Start (Windows)
 echo  ================================
 echo.
 
-:: Check Node.js, auto-install if missing
+:: Add common Node.js install paths in case PATH is not updated yet
+for %%d in (
+    "%ProgramFiles%\nodejs"
+    "%ProgramFiles(x86)%\nodejs"
+    "%LOCALAPPDATA%\Programs\nodejs"
+) do (
+    if exist "%%~d\npm.cmd" set "PATH=%%~d;!PATH!"
+)
+
 where npm >nul 2>&1
 if %errorlevel% neq 0 (
     echo  Node.js not found. Installing automatically...
-    echo  Please wait a moment.
     echo.
     winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
+    if !errorlevel! neq 0 (
+        echo.
+        echo  [ERROR] winget failed. Please install Node.js manually from https://nodejs.org
+        pause
+        exit /b 1
+    )
     echo.
-    echo  ================================
-    echo   Node.js installation complete!
-    echo   Please close this window and
-    echo   run this file again.
-    echo  ================================
+    :: Add install paths again after winget finishes
+    for %%d in (
+        "%ProgramFiles%\nodejs"
+        "%ProgramFiles(x86)%\nodejs"
+        "%LOCALAPPDATA%\Programs\nodejs"
+    ) do (
+        if exist "%%~d\npm.cmd" set "PATH=%%~d;!PATH!"
+    )
+    where npm >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo  ================================
+        echo   Node.js installed!
+        echo   Please close and run again.
+        echo  ================================
+        echo.
+        pause
+        exit /b 0
+    )
+    echo  Node.js is ready. Continuing...
     echo.
-    pause
-    exit /b 0
 )
 
 if not exist "node_modules" (
@@ -33,6 +59,7 @@ if not exist "node_modules" (
         pause
         exit /b 1
     )
+    echo.
 )
 
 echo  Building... This may take a few minutes.
