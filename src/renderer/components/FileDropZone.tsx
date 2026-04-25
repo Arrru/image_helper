@@ -6,9 +6,10 @@ interface Props {
   onError?: (msg: string) => void;
   compact?: boolean;
   fileType?: 'image' | 'sound';
+  className?: string;
 }
 
-export function FileDropZone({ onFiles, onError, compact = false, fileType = 'image' }: Props) {
+export function FileDropZone({ onFiles, onError, compact = false, fileType = 'image', className }: Props) {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const dragDepth = useRef(0);
@@ -95,9 +96,10 @@ export function FileDropZone({ onFiles, onError, compact = false, fileType = 'im
           ? 'border-primary bg-primary/5'
           : 'border-border hover:border-primary/60',
         compact ? 'p-6' : 'p-10',
+        className ?? '',
       ].join(' ')}
     >
-      <div className="flex flex-col items-center gap-3 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 text-center h-full">
         <div
           className={[
             'w-14 h-14 rounded-full flex items-center justify-center',

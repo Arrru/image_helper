@@ -150,9 +150,9 @@ export function Main({ onOpenSettings }: Props) {
             {/* Image + Sound sections side by side */}
             <div className="grid grid-cols-2 gap-4">
               {/* Image section */}
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-col">
                 <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
-                <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
+                <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" className="flex-1" />
                 {selectedFiles.length > 0 && (
                   <div className="space-y-3 mt-3">
                     <FileList files={selectedFiles} onRemove={removeFile} />
@@ -169,9 +169,9 @@ export function Main({ onOpenSettings }: Props) {
               </div>
 
               {/* Sound section */}
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-col">
                 <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
-                <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
+                <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" className="flex-1" />
                 {selectedSoundFiles.length > 0 && (
                   <div className="space-y-3 mt-3">
                     <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />
