@@ -132,7 +132,7 @@ export function Main({ onOpenSettings }: Props) {
           {/* Image section */}
           <div>
             <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
-            <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact={selectedFiles.length > 0} fileType="image" />
+            <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
             {selectedFiles.length > 0 && (
               <div className="space-y-3 mt-3">
                 <FileList files={selectedFiles} onRemove={removeFile} />
@@ -151,7 +151,7 @@ export function Main({ onOpenSettings }: Props) {
           {/* Sound section */}
           <div>
             <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
-            <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact={selectedSoundFiles.length > 0} fileType="sound" />
+            <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
             {selectedSoundFiles.length > 0 && (
               <div className="space-y-3 mt-3">
                 <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />

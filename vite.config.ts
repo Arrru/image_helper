@@ -26,7 +26,7 @@ export default defineConfig({
           build: {
             outDir: 'dist/main',
             rollupOptions: {
-              external: ['electron', 'keytar', '@octokit/rest', 'electron-updater'],
+              external: ['electron', 'keytar', 'electron-updater'],
             },
           },
         },

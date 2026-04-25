@@ -29,6 +29,7 @@
       "package.json",
       "!node_modules/**/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!node_modules/**/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/**/*.{ts,map,d.ts}",
       "!**/*.map"
     ],
     "asarUnpack": [
@@ -69,12 +70,12 @@
     ]
   },
   "dependencies": {
-    "@octokit/rest": "^20.0.2",
     "electron-updater": "^6.1.7",
-    "keytar": "^7.9.0",
-    "zustand": "^4.5.0"
+    "keytar": "^7.9.0"
   },
   "devDependencies": {
+    "@octokit/rest": "^20.0.2",
+    "zustand": "^4.5.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
