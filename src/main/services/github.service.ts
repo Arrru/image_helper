@@ -4,6 +4,7 @@ import path from 'node:path';
 import {
   DEFAULT_CONFIG,
   type GitHubConfig,
+  type RemoteFile,
   type ValidateTokenResult,
 } from '../../shared/types';
 import { formatKSTShort } from '../utils/time';
@@ -271,4 +272,57 @@ export function getDefaultConfig(): GitHubConfig {
  */
 export function remoteNameFor(p: string): string {
   return path.basename(p);
+}
+
+/**
+ * List files in a remote directory. Returns [] if the directory does not exist (404).
+ */
+export async function listRemoteFiles(
+  token: string,
+  cfg: GitHubConfig,
+  dir: string,
+): Promise<RemoteFile[]> {
+  const octokit = createClient(token);
+  try {
+    const res = await octokit.repos.getContent({
+      owner: cfg.owner,
+      repo: cfg.repo,
+      path: dir,
+      ref: cfg.branch,
+    });
+    if (!Array.isArray(res.data)) return [];
+    return res.data
+      .filter((item) => item.type === 'file')
+      .map((item) => ({
+        name: item.name,
+        path: item.path,
+        sha: item.sha,
+        size: item.size,
+      }));
+  } catch (err) {
+    const anyErr = err as { status?: number };
+    if (anyErr?.status === 404) return [];
+    throw err;
+  }
+}
+
+/**
+ * Delete a single file from the GitHub repo via the Contents API.
+ */
+export async function deleteRemoteFile(
+  token: string,
+  cfg: GitHubConfig,
+  filePath: string,
+  sha: string,
+  message: string,
+): Promise<void> {
+  const octokit = createClient(token);
+  await octokit.repos.deleteFile({
+    owner: cfg.owner,
+    repo: cfg.repo,
+    path: filePath,
+    message,
+    sha,
+    branch: cfg.branch,
+  });
 }

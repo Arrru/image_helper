@@ -4,6 +4,7 @@ import { IPC } from '../shared/ipc-channels';
 import { registerAuthIpc } from './ipc/auth.ipc';
 import { registerConfigIpc } from './ipc/config.ipc';
 import { registerDeployIpc, registerFileReadIpc } from './ipc/deploy.ipc';
+import { registerFilesIpc } from './ipc/files.ipc';
 import { cancelAllPolling } from './services/poller.service';
 
 process.on('uncaughtException', (error) => {
@@ -180,6 +181,7 @@ app.whenReady().then(() => {
   registerConfigIpc();
   registerDeployIpc();
   registerFileReadIpc();
+  registerFilesIpc();
   registerGlobalIpc();
 
   buildMenu();

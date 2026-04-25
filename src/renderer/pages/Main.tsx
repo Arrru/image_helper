@@ -8,6 +8,7 @@ import { useDeployment } from '../hooks/useDeployment';
 import { useAppStore } from '../store/appStore';
 import type { SelectedFile } from '../../shared/types';
 import { MAX_FILES, MAX_SOUND_FILES } from '../../shared/types';
+import FileManager from './FileManager';
 
 function fmtKST(iso: string): string {
   const d = new Date(iso);
@@ -44,6 +45,7 @@ export function Main({ onOpenSettings }: Props) {
   const { startDeploy } = useDeployment();
   const [toast, setToast] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'info' | 'error' | 'warning'>('info');
+  const [showFileManager, setShowFileManager] = useState(false);
 
   const showToast = (msg: string, type: 'info' | 'error' | 'warning' = 'info') => {
     setToast(msg);
@@ -112,17 +114,31 @@ export function Main({ onOpenSettings }: Props) {
             </div>
             <h1 className="text-lg font-semibold text-text-primary">배포 도우미</h1>
           </div>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="btn-ghost"
-            aria-label="설정"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5" aria-hidden>
-              <circle cx="12" cy="12" r="3" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 114.22 16.97l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowFileManager(true)}
+              className="btn-ghost"
+              aria-label="파일 관리"
+              title="파일 관리"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M12 10v6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="btn-ghost"
+              aria-label="설정"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5" aria-hidden>
+                <circle cx="12" cy="12" r="3" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 114.22 16.97l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -230,6 +246,9 @@ export function Main({ onOpenSettings }: Props) {
           </div>
         </div>
       )}
+
+      {/* File Manager modal */}
+      {showFileManager && <FileManager onClose={() => setShowFileManager(false)} />}
     </div>
   );
 }

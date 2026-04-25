@@ -2,12 +2,14 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from '../shared/ipc-channels';
 import type {
   AppConfig,
+  DeleteRemoteFilesResult,
   DeploymentRecord,
   DeployPollResult,
   DeployProgress,
   DeployStartResult,
   DialogOpenFilesResult,
   FileInputPayload,
+  ListRemoteFilesResult,
   LoadTokenResult,
   SaveTokenResult,
   ValidateTokenResult,
@@ -74,6 +76,12 @@ const api = {
     ): Promise<
       { dataUrl: string; size: number; name: string } | { error: string }
     > => ipcRenderer.invoke(IPC.FILE_READ_PREVIEW, filePath),
+  },
+  files: {
+    list: (): Promise<ListRemoteFilesResult> =>
+      ipcRenderer.invoke(IPC.FILES_LIST),
+    delete: (items: { path: string; sha: string }[]): Promise<DeleteRemoteFilesResult> =>
+      ipcRenderer.invoke(IPC.FILES_DELETE, items),
   },
   shell: {
     openExternal: (url: string): Promise<{ success: boolean }> =>

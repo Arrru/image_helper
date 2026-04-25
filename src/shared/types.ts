@@ -98,6 +98,25 @@ export interface AppError {
   hint: string;
 }
 
+export interface RemoteFile {
+  name: string;
+  path: string; // full repo path e.g. assets/images/foo.png
+  sha: string;
+  size: number;
+}
+
+export interface ListRemoteFilesResult {
+  images: RemoteFile[];
+  sounds: RemoteFile[];
+  error?: string;
+}
+
+export interface DeleteRemoteFilesResult {
+  success: boolean;
+  deletedCount: number;
+  error?: string;
+}
+
 export const DEFAULT_CONFIG: GitHubConfig = {
   owner: 'Arrru',
   repo: 'dosa',

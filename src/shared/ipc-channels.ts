@@ -29,6 +29,10 @@ export const IPC = {
   // External
   SHELL_OPEN: 'shell:open-external',
 
+  // Files (remote management)
+  FILES_LIST: 'files:list',
+  FILES_DELETE: 'files:delete',
+
   // App
   APP_VERSION: 'app:version',
   APP_CHECK_UPDATE: 'app:check-update',
