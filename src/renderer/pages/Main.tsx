@@ -100,7 +100,7 @@ export function Main({ onOpenSettings }: Props) {
   const pagesUrl = lastDeployment?.pagesUrl || 'https://arrru.github.io/dosa/';
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* Top bar */}
       <header className="px-6 py-4 border-b border-border bg-surface/70 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -127,53 +127,61 @@ export function Main({ onOpenSettings }: Props) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 px-6 py-8 overflow-auto">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Image section */}
-          <div>
-            <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
-            <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
-            {selectedFiles.length > 0 && (
-              <div className="space-y-3 mt-3">
-                <FileList files={selectedFiles} onRemove={removeFile} />
-                <div className="flex items-center justify-between">
-                  <button type="button" onClick={clearFiles} className="text-sm text-text-secondary hover:text-error">
-                    전체 지우기
-                  </button>
-                  <span className="text-xs text-text-secondary">
-                    최대 {MAX_FILES}개 · 총 {(selectedFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
-                  </span>
+      <main className="flex-1 min-h-0 flex flex-col px-6">
+        {/* Scrollable file sections */}
+        <div className="flex-1 overflow-auto py-6">
+          <div className="max-w-4xl mx-auto space-y-5">
+            {/* Image section */}
+            <div>
+              <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
+              <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
+              {selectedFiles.length > 0 && (
+                <div className="space-y-3 mt-3">
+                  <FileList files={selectedFiles} onRemove={removeFile} />
+                  <div className="flex items-center justify-between">
+                    <button type="button" onClick={clearFiles} className="text-sm text-text-secondary hover:text-error">
+                      전체 지우기
+                    </button>
+                    <span className="text-xs text-text-secondary">
+                      최대 {MAX_FILES}개 · 총 {(selectedFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Sound section */}
-          <div>
-            <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
-            <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
-            {selectedSoundFiles.length > 0 && (
-              <div className="space-y-3 mt-3">
-                <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />
-                <div className="flex items-center justify-between">
-                  <button type="button" onClick={clearSoundFiles} className="text-sm text-text-secondary hover:text-error">
-                    전체 지우기
-                  </button>
-                  <span className="text-xs text-text-secondary">
-                    최대 {MAX_SOUND_FILES}개 · 총 {(selectedSoundFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
-                  </span>
+            {/* Sound section */}
+            <div>
+              <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
+              <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
+              {selectedSoundFiles.length > 0 && (
+                <div className="space-y-3 mt-3">
+                  <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />
+                  <div className="flex items-center justify-between">
+                    <button type="button" onClick={clearSoundFiles} className="text-sm text-text-secondary hover:text-error">
+                      전체 지우기
+                    </button>
+                    <span className="text-xs text-text-secondary">
+                      최대 {MAX_SOUND_FILES}개 · 총 {(selectedSoundFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <HistoryPanel history={history} />
           </div>
+        </div>
 
-          <DeployButton
-            onClick={onDeployClick}
-            disabled={selectedFiles.length === 0 && selectedSoundFiles.length === 0}
-            loading={deployState === 'uploading' || deployState === 'building'}
-          />
-
-          <HistoryPanel history={history} />
+        {/* Always-visible deploy button */}
+        <div className="py-3 border-t border-border">
+          <div className="max-w-4xl mx-auto">
+            <DeployButton
+              onClick={onDeployClick}
+              disabled={selectedFiles.length === 0 && selectedSoundFiles.length === 0}
+              loading={deployState === 'uploading' || deployState === 'building'}
+            />
+          </div>
         </div>
       </main>
 
