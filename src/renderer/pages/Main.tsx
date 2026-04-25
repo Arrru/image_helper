@@ -147,42 +147,45 @@ export function Main({ onOpenSettings }: Props) {
         {/* Scrollable file sections */}
         <div className="flex-1 overflow-auto py-6">
           <div className="max-w-4xl mx-auto space-y-5">
-            {/* Image section */}
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
-              <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
-              {selectedFiles.length > 0 && (
-                <div className="space-y-3 mt-3">
-                  <FileList files={selectedFiles} onRemove={removeFile} />
-                  <div className="flex items-center justify-between">
-                    <button type="button" onClick={clearFiles} className="text-sm text-text-secondary hover:text-error">
-                      전체 지우기
-                    </button>
-                    <span className="text-xs text-text-secondary">
-                      최대 {MAX_FILES}개 · 총 {(selectedFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
-                    </span>
+            {/* Image + Sound sections side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Image section */}
+              <div className="min-w-0">
+                <h2 className="text-sm font-medium text-text-secondary mb-2">이미지 파일</h2>
+                <FileDropZone onFiles={handleFiles} onError={(m) => showToast(m, 'error')} compact fileType="image" />
+                {selectedFiles.length > 0 && (
+                  <div className="space-y-3 mt-3">
+                    <FileList files={selectedFiles} onRemove={removeFile} />
+                    <div className="flex items-center justify-between">
+                      <button type="button" onClick={clearFiles} className="text-sm text-text-secondary hover:text-error">
+                        전체 지우기
+                      </button>
+                      <span className="text-xs text-text-secondary">
+                        {MAX_FILES}개 · {(selectedFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Sound section */}
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
-              <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
-              {selectedSoundFiles.length > 0 && (
-                <div className="space-y-3 mt-3">
-                  <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />
-                  <div className="flex items-center justify-between">
-                    <button type="button" onClick={clearSoundFiles} className="text-sm text-text-secondary hover:text-error">
-                      전체 지우기
-                    </button>
-                    <span className="text-xs text-text-secondary">
-                      최대 {MAX_SOUND_FILES}개 · 총 {(selectedSoundFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
-                    </span>
+              {/* Sound section */}
+              <div className="min-w-0">
+                <h2 className="text-sm font-medium text-text-secondary mb-2">사운드 파일</h2>
+                <FileDropZone onFiles={handleSoundFiles} onError={(m) => showToast(m, 'error')} compact fileType="sound" />
+                {selectedSoundFiles.length > 0 && (
+                  <div className="space-y-3 mt-3">
+                    <FileList files={selectedSoundFiles} onRemove={removeSoundFile} />
+                    <div className="flex items-center justify-between">
+                      <button type="button" onClick={clearSoundFiles} className="text-sm text-text-secondary hover:text-error">
+                        전체 지우기
+                      </button>
+                      <span className="text-xs text-text-secondary">
+                        {MAX_SOUND_FILES}개 · {(selectedSoundFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1)}MB
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <HistoryPanel history={history} />
