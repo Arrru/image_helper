@@ -5,13 +5,10 @@ interface Props {
   onFiles: (files: SelectedFile[]) => void;
   onError?: (msg: string) => void;
   compact?: boolean;
+  fileType?: 'image' | 'sound';
 }
 
-/**
- * A drag-and-drop zone that also supports opening the native file picker.
- * Reads file contents via IPC to produce base64 previews.
- */
-export function FileDropZone({ onFiles, onError, compact = false }: Props) {
+export function FileDropZone({ onFiles, onError, compact = false, fileType = 'image' }: Props) {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const dragDepth = useRef(0);
@@ -65,10 +62,12 @@ export function FileDropZone({ onFiles, onError, compact = false }: Props) {
   );
 
   const handleOpenDialog = useCallback(async () => {
-    const res = await window.electronAPI.dialog.openFiles();
+    const res = fileType === 'sound'
+      ? await window.electronAPI.dialog.openSoundFiles()
+      : await window.electronAPI.dialog.openFiles();
     if (res.canceled || res.paths.length === 0) return;
     await processPaths(res.paths);
-  }, [processPaths]);
+  }, [processPaths, fileType]);
 
   return (
     <div
@@ -106,28 +105,27 @@ export function FileDropZone({ onFiles, onError, compact = false }: Props) {
             'transition-colors',
           ].join(' ')}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            className="w-7 h-7"
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4-4 4M12 4v12"
-            />
-          </svg>
+          {fileType === 'sound' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-7 h-7" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-7 h-7" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4-4 4M12 4v12" />
+            </svg>
+          )}
         </div>
         <p className="text-text-primary font-medium">
           {dragging
             ? '여기에 놓으면 추가돼요'
-            : '이미지 파일을 여기에 끌어다 놓으세요'}
+            : fileType === 'sound'
+              ? '사운드 파일을 여기에 끌어다 놓으세요'
+              : '이미지 파일을 여기에 끌어다 놓으세요'}
         </p>
         <p className="text-text-secondary text-sm">
-          PNG, JPG, WEBP, SVG, GIF · 최대 20개, 파일당 50MB
+          {fileType === 'sound'
+            ? 'MP3, OGG, WAV, FLAC, OPUS, AAC · 최대 20개, 파일당 50MB'
+            : 'PNG, JPG, WEBP, SVG, GIF · 최대 20개, 파일당 50MB'}
         </p>
         <button
           type="button"

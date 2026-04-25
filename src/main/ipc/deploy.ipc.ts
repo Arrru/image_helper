@@ -35,10 +35,11 @@ export function registerDeployIpc(): void {
     IPC.DEPLOY_START,
     async (
       _evt,
-      payload: { files: FileInputPayload[] },
+      payload: { files: FileInputPayload[]; soundFiles?: FileInputPayload[] },
     ): Promise<DeployStartResult> => {
       const files = payload.files ?? [];
-      if (files.length === 0) {
+      const soundFiles = payload.soundFiles ?? [];
+      if (files.length === 0 && soundFiles.length === 0) {
         return {
           runId: null,
           commitSha: '',
@@ -55,52 +56,96 @@ export function registerDeployIpc(): void {
         };
       }
 
-      const validation = await validateBatch(files.map((f) => f.path));
-      if (!validation.valid) {
-        return {
-          runId: null,
-          commitSha: '',
-          error: validation.errorMessage ?? '파일을 확인해 주세요.',
-        };
+      if (files.length > 0) {
+        const validation = await validateBatch(files.map((f) => f.path));
+        if (!validation.valid) {
+          return {
+            runId: null,
+            commitSha: '',
+            error: validation.errorMessage ?? '파일을 확인해 주세요.',
+          };
+        }
+      }
+
+      if (soundFiles.length > 0) {
+        const soundValidation = await validateBatch(soundFiles.map((f) => f.path), 'sound');
+        if (!soundValidation.valid) {
+          return {
+            runId: null,
+            commitSha: '',
+            error: soundValidation.errorMessage ?? '사운드 파일을 확인해 주세요.',
+          };
+        }
       }
 
       const cfg = getDefaultConfig();
       const win = getMainWindow();
       const startedAt = new Date().toISOString();
+      const totalFiles = files.length + soundFiles.length;
 
-      // Upload files sequentially with progress events
-      let commitSha = '';
-      try {
-        const result = await uploadFiles(
-          token,
-          cfg,
-          files.map((f) => ({ path: f.path, name: path.basename(f.name) })),
-          (idx, total, name) => {
-            const pct = Math.round((idx / total) * 30); // 0..30 for upload phase
-            if (win && !win.isDestroyed()) {
-              win.webContents.send(IPC.EVENT_DEPLOY_PROGRESS, {
-                step: 'uploading',
-                percent: pct,
-                message: `파일 전송 중… (${idx}/${total}) ${name}`,
-              });
-            }
-          },
-        );
-        commitSha = result.commitSha;
-      } catch (err) {
+      const handleUploadError = (err: unknown): DeployStartResult => {
         const anyErr = err as { status?: number; message?: string };
         let msg = '업로드 중 오류가 발생했어요.';
         if (anyErr?.status === 401) {
           msg = 'GitHub 연결이 끊겼어요. 설정에서 토큰을 다시 확인해 주세요.';
         } else if (anyErr?.status === 403) {
-          msg =
-            "파일을 올릴 권한이 없어요. 토큰에 'repo'와 'workflow' 권한이 있는지 확인해 주세요.";
+          msg = "파일을 올릴 권한이 없어요. 토큰에 'repo'와 'workflow' 권한이 있는지 확인해 주세요.";
         } else if (anyErr?.message?.includes('ENOTFOUND') || anyErr?.message?.includes('ECONN')) {
           msg = '인터넷 연결을 확인해 주세요.';
         } else if (anyErr?.message) {
           msg = anyErr.message;
         }
         return { runId: null, commitSha: '', error: msg };
+      };
+
+      // Upload image files
+      let commitSha = '';
+      if (files.length > 0) {
+        try {
+          const result = await uploadFiles(
+            token,
+            cfg,
+            files.map((f) => ({ path: f.path, name: path.basename(f.name) })),
+            (idx, _total, name) => {
+              const pct = Math.round((idx / totalFiles) * 30);
+              if (win && !win.isDestroyed()) {
+                win.webContents.send(IPC.EVENT_DEPLOY_PROGRESS, {
+                  step: 'uploading',
+                  percent: pct,
+                  message: `이미지 전송 중… (${idx}/${files.length}) ${name}`,
+                });
+              }
+            },
+          );
+          commitSha = result.commitSha;
+        } catch (err) {
+          return handleUploadError(err);
+        }
+      }
+
+      // Upload sound files
+      if (soundFiles.length > 0) {
+        try {
+          const result = await uploadFiles(
+            token,
+            cfg,
+            soundFiles.map((f) => ({ path: f.path, name: path.basename(f.name) })),
+            (idx, _total, name) => {
+              const pct = Math.round(((files.length + idx) / totalFiles) * 30);
+              if (win && !win.isDestroyed()) {
+                win.webContents.send(IPC.EVENT_DEPLOY_PROGRESS, {
+                  step: 'uploading',
+                  percent: pct,
+                  message: `사운드 전송 중… (${idx}/${soundFiles.length}) ${name}`,
+                });
+              }
+            },
+            cfg.soundPath,
+          );
+          commitSha = result.commitSha;
+        } catch (err) {
+          return handleUploadError(err);
+        }
       }
 
       // Signal upload done
@@ -118,7 +163,9 @@ export function registerDeployIpc(): void {
       if (win) {
         const key = `deploy-${commitSha}`;
         const recordId = randomId();
-        const fileNames = files.map((f) => path.basename(f.name));
+        const imageNames = files.map((f) => path.basename(f.name));
+        const soundNames = soundFiles.map((f) => path.basename(f.name));
+        const allFileNames = [...imageNames, ...soundNames];
         startPolling({
           key,
           window: win,
@@ -137,7 +184,7 @@ export function registerDeployIpc(): void {
             const record: DeploymentRecord = {
               id: recordId,
               timestamp,
-              files: fileNames,
+              files: allFileNames,
               commitSha,
               workflowRunId: result.runId,
               status,
@@ -165,10 +212,13 @@ export function registerDeployIpc(): void {
             // OS notification
             try {
               if (Notification.isSupported()) {
+                const parts: string[] = [];
+                if (imageNames.length > 0) parts.push(`이미지 ${imageNames.length}개`);
+                if (soundNames.length > 0) parts.push(`사운드 ${soundNames.length}개`);
                 const n = new Notification({
                   title: result.success ? '배포 완료!' : '배포 실패',
                   body: result.success
-                    ? `${formatKSTShort(timestamp)} · ${fileNames.length}개 파일 업로드 완료`
+                    ? `${formatKSTShort(timestamp)} · ${parts.join(', ')} 업로드 완료`
                     : result.timeoutReached
                       ? '시간이 너무 오래 걸려 확인이 필요해요.'
                       : '게임 빌드에 실패했어요. 이전 버전은 유지됩니다.',

@@ -2,8 +2,10 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import {
   ALLOWED_EXT,
+  ALLOWED_SOUND_EXT,
   MAX_FILE_SIZE,
   MAX_FILES,
+  MAX_SOUND_FILES,
   MAX_TOTAL_SIZE,
 } from '../../shared/types';
 
@@ -32,10 +34,18 @@ export function hasAllowedExtension(name: string): boolean {
   return ALLOWED_EXT.includes(ext);
 }
 
+export function hasAllowedSoundExtension(name: string): boolean {
+  const ext = path.extname(name).toLowerCase();
+  return ALLOWED_SOUND_EXT.includes(ext);
+}
+
 /**
  * Validate a single file (by path).
  */
-export async function validateFile(filePath: string): Promise<FileValidationResult> {
+export async function validateFile(
+  filePath: string,
+  type: 'image' | 'sound' = 'image',
+): Promise<FileValidationResult> {
   const base = path.basename(filePath);
 
   if (!isValidFilename(base)) {
@@ -48,12 +58,15 @@ export async function validateFile(filePath: string): Promise<FileValidationResu
     };
   }
 
-  if (!hasAllowedExtension(base)) {
+  const extOk = type === 'sound' ? hasAllowedSoundExtension(base) : hasAllowedExtension(base);
+  if (!extOk) {
     return {
       valid: false,
       errorCode: 'BAD_EXT',
       errorMessage:
-        '지원하지 않는 파일 형식이에요. PNG, JPG, WEBP, SVG, GIF만 올릴 수 있어요.',
+        type === 'sound'
+          ? '지원하지 않는 파일 형식이에요. MP3, OGG, WAV, FLAC, OPUS, AAC만 올릴 수 있어요.'
+          : '지원하지 않는 파일 형식이에요. PNG, JPG, WEBP, SVG, GIF만 올릴 수 있어요.',
       file: base,
     };
   }
@@ -87,18 +100,20 @@ export async function validateFile(filePath: string): Promise<FileValidationResu
  */
 export async function validateBatch(
   filePaths: string[],
+  type: 'image' | 'sound' = 'image',
 ): Promise<FileValidationResult> {
-  if (filePaths.length > MAX_FILES) {
+  const maxFiles = type === 'sound' ? MAX_SOUND_FILES : MAX_FILES;
+  if (filePaths.length > maxFiles) {
     return {
       valid: false,
       errorCode: 'TOO_MANY',
-      errorMessage: `한 번에 최대 ${MAX_FILES}개 파일까지 올릴 수 있어요.`,
+      errorMessage: `한 번에 최대 ${maxFiles}개 파일까지 올릴 수 있어요.`,
     };
   }
 
   let total = 0;
   for (const p of filePaths) {
-    const v = await validateFile(p);
+    const v = await validateFile(p, type);
     if (!v.valid) return v;
     try {
       const st = await fs.stat(p);

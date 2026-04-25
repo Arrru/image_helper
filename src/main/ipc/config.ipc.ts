@@ -47,6 +47,7 @@ export async function loadConfig(): Promise<AppConfig> {
       repo: DEFAULT_CONFIG.repo,
       branch: DEFAULT_CONFIG.branch,
       imagePath: DEFAULT_CONFIG.imagePath,
+      soundPath: DEFAULT_CONFIG.soundPath,
       pagesUrl: PAGES_URL,
     };
   } catch {

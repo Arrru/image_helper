@@ -35,8 +35,8 @@ const api = {
       ipcRenderer.invoke(IPC.AUTH_DELETE_TOKEN),
   },
   deploy: {
-    start: (files: FileInputPayload[]): Promise<DeployStartResult> =>
-      ipcRenderer.invoke(IPC.DEPLOY_START, { files }),
+    start: (files: FileInputPayload[], soundFiles?: FileInputPayload[]): Promise<DeployStartResult> =>
+      ipcRenderer.invoke(IPC.DEPLOY_START, { files, soundFiles }),
     poll: (runId: number): Promise<DeployPollResult> =>
       ipcRenderer.invoke(IPC.DEPLOY_POLL, runId),
     onProgress: (cb: Listener<DeployProgress>) =>
@@ -65,6 +65,8 @@ const api = {
   dialog: {
     openFiles: (): Promise<DialogOpenFilesResult> =>
       ipcRenderer.invoke(IPC.DIALOG_OPEN_FILES),
+    openSoundFiles: (): Promise<DialogOpenFilesResult> =>
+      ipcRenderer.invoke(IPC.DIALOG_OPEN_SOUNDS),
   },
   file: {
     readPreview: (

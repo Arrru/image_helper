@@ -21,6 +21,7 @@ export const IPC = {
 
   // Dialog
   DIALOG_OPEN_FILES: 'dialog:open-files',
+  DIALOG_OPEN_SOUNDS: 'dialog:open-sounds',
 
   // File read (for thumbnails)
   FILE_READ_PREVIEW: 'file:read-preview',

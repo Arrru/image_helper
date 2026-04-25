@@ -22,6 +22,7 @@ interface AppState {
   // Deploy flow
   deployState: DeployState;
   selectedFiles: SelectedFile[];
+  selectedSoundFiles: SelectedFile[];
   progress: DeployProgress | null;
   lastDeployment: LastDeployment | null;
   history: DeploymentRecord[];
@@ -43,6 +44,10 @@ interface AppState {
   removeFile: (path: string) => void;
   clearFiles: () => void;
 
+  addSoundFiles: (files: SelectedFile[]) => { added: number; skippedDupes: string[] };
+  removeSoundFile: (path: string) => void;
+  clearSoundFiles: () => void;
+
   reset: () => void;
 }
 
@@ -51,6 +56,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   githubUsername: null,
   deployState: 'not_configured',
   selectedFiles: [],
+  selectedSoundFiles: [],
   progress: null,
   lastDeployment: null,
   history: [],
@@ -61,7 +67,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       isAuthenticated: v,
       githubUsername: username,
-      deployState: v ? (get().selectedFiles.length > 0 ? 'ready' : 'idle') : 'not_configured',
+      deployState: v
+        ? (get().selectedFiles.length > 0 || get().selectedSoundFiles.length > 0 ? 'ready' : 'idle')
+        : 'not_configured',
     }),
 
   setDeployState: (s) => set({ deployState: s }),
@@ -87,35 +95,78 @@ export const useAppStore = create<AppState>((set, get) => ({
     const next = [...existing, ...fresh];
     set({
       selectedFiles: next,
-      deployState:
-        get().isAuthenticated && next.length > 0 ? 'ready' : get().deployState,
+      deployState: get().isAuthenticated && next.length > 0 ? 'ready' : get().deployState,
     });
     return { added: fresh.length, skippedDupes: skipped };
   },
 
   removeFile: (path) => {
     const next = get().selectedFiles.filter((f) => f.path !== path);
+    const hasSounds = get().selectedSoundFiles.length > 0;
     set({
       selectedFiles: next,
-      deployState:
-        get().isAuthenticated
-          ? next.length > 0
-            ? 'ready'
-            : 'idle'
-          : 'not_configured',
+      deployState: get().isAuthenticated
+        ? next.length > 0 || hasSounds ? 'ready' : 'idle'
+        : 'not_configured',
     });
   },
 
   clearFiles: () => {
+    const hasSounds = get().selectedSoundFiles.length > 0;
     set({
       selectedFiles: [],
-      deployState: get().isAuthenticated ? 'idle' : 'not_configured',
+      deployState: get().isAuthenticated
+        ? hasSounds ? 'ready' : 'idle'
+        : 'not_configured',
+    });
+  },
+
+  addSoundFiles: (files) => {
+    const existing = get().selectedSoundFiles;
+    const existingNames = new Set(existing.map((f) => f.name.toLowerCase()));
+    const skipped: string[] = [];
+    const fresh: SelectedFile[] = [];
+    for (const f of files) {
+      if (existingNames.has(f.name.toLowerCase())) {
+        skipped.push(f.name);
+      } else {
+        fresh.push(f);
+        existingNames.add(f.name.toLowerCase());
+      }
+    }
+    const next = [...existing, ...fresh];
+    set({
+      selectedSoundFiles: next,
+      deployState: get().isAuthenticated && next.length > 0 ? 'ready' : get().deployState,
+    });
+    return { added: fresh.length, skippedDupes: skipped };
+  },
+
+  removeSoundFile: (path) => {
+    const next = get().selectedSoundFiles.filter((f) => f.path !== path);
+    const hasImages = get().selectedFiles.length > 0;
+    set({
+      selectedSoundFiles: next,
+      deployState: get().isAuthenticated
+        ? hasImages || next.length > 0 ? 'ready' : 'idle'
+        : 'not_configured',
+    });
+  },
+
+  clearSoundFiles: () => {
+    const hasImages = get().selectedFiles.length > 0;
+    set({
+      selectedSoundFiles: [],
+      deployState: get().isAuthenticated
+        ? hasImages ? 'ready' : 'idle'
+        : 'not_configured',
     });
   },
 
   reset: () =>
     set({
       selectedFiles: [],
+      selectedSoundFiles: [],
       progress: null,
       errorDetail: null,
       deployState: get().isAuthenticated ? 'idle' : 'not_configured',

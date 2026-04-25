@@ -5,6 +5,7 @@ export interface GitHubConfig {
   repo: string;
   branch: string;
   imagePath: string;
+  soundPath: string;
 }
 
 export interface SelectedFile {
@@ -102,6 +103,7 @@ export const DEFAULT_CONFIG: GitHubConfig = {
   repo: 'dosa',
   branch: 'main',
   imagePath: 'assets/images',
+  soundPath: 'assets/sounds',
 };
 
 export const PAGES_URL = 'https://arrru.github.io/dosa/';
@@ -113,3 +115,5 @@ export const MAX_FILES = 20;
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 export const MAX_TOTAL_SIZE = 200 * 1024 * 1024; // 200MB
 export const ALLOWED_EXT = ['.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'];
+export const ALLOWED_SOUND_EXT = ['.mp3', '.ogg', '.wav', '.flac', '.opus', '.aac'];
+export const MAX_SOUND_FILES = 20;

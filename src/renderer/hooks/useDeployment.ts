@@ -5,14 +5,14 @@ import type { AppError, FileInputPayload } from '../../shared/types';
 // Event subscriptions (onProgress / onComplete) are intentionally kept in App.tsx
 // so they survive when this hook's host component (<Main>) unmounts during deployment.
 export function useDeployment() {
-  const { selectedFiles, setDeployState, setProgress, setError } = useAppStore();
+  const { selectedFiles, selectedSoundFiles, setDeployState, setProgress, setError } = useAppStore();
 
   const startDeploy = useCallback(async () => {
-    if (selectedFiles.length === 0) {
+    if (selectedFiles.length === 0 && selectedSoundFiles.length === 0) {
       setError({
         title: '선택된 파일이 없어요',
-        message: '업로드할 이미지를 먼저 추가해 주세요.',
-        hint: '파일 선택 버튼으로 이미지를 골라주세요.',
+        message: '업로드할 이미지 또는 사운드 파일을 먼저 추가해 주세요.',
+        hint: '파일 선택 버튼으로 파일을 골라주세요.',
       });
       return;
     }
@@ -24,12 +24,10 @@ export function useDeployment() {
       message: '업로드 준비 중…',
     });
 
-    const payload: FileInputPayload[] = selectedFiles.map((f) => ({
-      name: f.name,
-      path: f.path,
-    }));
+    const files: FileInputPayload[] = selectedFiles.map((f) => ({ name: f.name, path: f.path }));
+    const soundFiles: FileInputPayload[] = selectedSoundFiles.map((f) => ({ name: f.name, path: f.path }));
 
-    const result = await window.electronAPI.deploy.start(payload);
+    const result = await window.electronAPI.deploy.start(files, soundFiles);
     if (result.error) {
       setDeployState('failed');
       const err: AppError = {
@@ -40,7 +38,7 @@ export function useDeployment() {
       setError(err);
     }
     // success path is handled via events
-  }, [selectedFiles, setDeployState, setError, setProgress]);
+  }, [selectedFiles, selectedSoundFiles, setDeployState, setError, setProgress]);
 
   return { startDeploy };
 }

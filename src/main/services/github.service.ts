@@ -110,10 +110,11 @@ export async function uploadFile(
   localPath: string,
   remoteName: string,
   message: string,
+  remoteDir?: string,
 ): Promise<string> {
   const contentBuf = await fs.readFile(localPath);
   const contentB64 = contentBuf.toString('base64');
-  const remotePath = `${cfg.imagePath}/${remoteName}`;
+  const remotePath = `${remoteDir ?? cfg.imagePath}/${remoteName}`;
 
   let sha: string | undefined;
   try {
@@ -161,14 +162,15 @@ export async function uploadFiles(
   cfg: GitHubConfig,
   files: Array<{ path: string; name: string }>,
   onProgress: (idx: number, total: number, name: string) => void,
+  remoteDir?: string,
 ): Promise<UploadBatchResult> {
   const octokit = createClient(token);
-  const msg = `[Deploy] 이미지 업데이트 - ${formatKSTShort(new Date())}`;
+  const msg = `[Deploy] 에셋 업데이트 - ${formatKSTShort(new Date())}`;
   let lastSha = '';
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     onProgress(i + 1, files.length, f.name);
-    lastSha = await uploadFile(octokit, cfg, f.path, f.name, msg);
+    lastSha = await uploadFile(octokit, cfg, f.path, f.name, msg, remoteDir);
   }
   return { commitSha: lastSha, uploadedCount: files.length };
 }

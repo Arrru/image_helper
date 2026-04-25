@@ -80,6 +80,21 @@ function registerGlobalIpc(): void {
     },
   );
 
+  ipcMain.handle(
+    IPC.DIALOG_OPEN_SOUNDS,
+    async (): Promise<{ paths: string[]; canceled: boolean }> => {
+      if (!mainWindow) return { paths: [], canceled: true };
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: '사운드 파일 선택',
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+          { name: '사운드', extensions: ['mp3', 'ogg', 'wav', 'flac', 'opus', 'aac'] },
+        ],
+      });
+      return { paths: result.filePaths, canceled: result.canceled };
+    },
+  );
+
   ipcMain.handle(IPC.SHELL_OPEN, async (_evt, url: string) => {
     await shell.openExternal(url);
     return { success: true };
