@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'assets/images/**'
+      - 'assets/sounds/**'
       - 'project/**'
   workflow_dispatch:
 
@@ -30,12 +31,12 @@ jobs:
           use-dotnet: false
 
       - name: Import project
-        run: godot --headless --import --quit-after 1000 || true
+        run: godot --headless --path ./project --import --quit-after 1000 || true
 
       - name: Export Web
         run: |
           mkdir -p ./build/web
-          godot --headless --export-release "Web" ./build/web/index.html --path ./project
+          godot --headless --path ./project --export-release "Web" ./build/web/index.html
 
       - name: Copy assets
         run: cp -r ./assets ./build/web/assets
