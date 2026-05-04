@@ -148,6 +148,7 @@ export function startPolling(options: {
       timeoutReached,
       htmlUrl,
       errorCode,
+      conclusion,
     });
 
     onDone({

@@ -51,6 +51,7 @@ const api = {
         timeoutReached?: boolean;
         htmlUrl?: string | null;
         errorCode?: string;
+        conclusion?: string | null;
       }>,
     ) => on(IPC.EVENT_DEPLOY_COMPLETE, cb),
   },

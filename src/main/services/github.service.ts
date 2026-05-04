@@ -243,7 +243,7 @@ export async function findRunForCommit(
 
     // head_sha returned nothing — try dispatch-event fallback
     if (typeof dispatchedAtMs === 'number') {
-      const cutoff = dispatchedAtMs - 30_000;
+      const cutoff = dispatchedAtMs - 5_000;
       for (const event of ['workflow_dispatch', 'repository_dispatch'] as const) {
         try {
           const r = await octokit.actions.listWorkflowRunsForRepo({

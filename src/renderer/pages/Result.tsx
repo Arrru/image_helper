@@ -94,12 +94,24 @@ export function Result({ onBack, onRetry }: Props) {
               )}
             </div>
 
-            <p className="text-xs text-text-secondary text-center mb-6">
+            {errorDetail?.htmlUrl && (
+              <div className="mb-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => void window.electronAPI.shell.openExternal(errorDetail.htmlUrl!)}
+                  className="text-sm text-primary hover:text-primary-hover underline underline-offset-2"
+                >
+                  GitHub Actions 빌드 로그 보기 →
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-text-secondary text-center mb-4">
               문제가 계속되면 스크린샷을 찍어 개발팀에게 보내주세요.
             </p>
 
             {errorDetail?.errorCode && (
-              <p className="text-xs text-text-secondary/60 text-center mt-2 font-mono">
+              <p className="text-xs text-text-secondary/50 text-center mb-4 font-mono">
                 오류 코드: {errorDetail.errorCode}
               </p>
             )}

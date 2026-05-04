@@ -98,6 +98,7 @@ export interface AppError {
   message: string;
   hint: string;
   errorCode?: string;
+  htmlUrl?: string;
 }
 
 export const DEPLOY_ERROR = {

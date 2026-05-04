@@ -45,15 +45,28 @@ export default function App() {
         });
       } else {
         setDeployState('failed');
+        const isCancelled = r.conclusion === 'cancelled';
+        const isBuildTimeout = r.conclusion === 'timed_out';
+        const isPollerTimeout = r.timeoutReached && !r.conclusion;
+        let title = '배포에 실패했어요';
+        let message = '게임 빌드에 실패했어요. 이전 버전은 그대로 유지됩니다.';
+        let hint = 'GitHub Actions 로그를 확인해 주세요.';
+        if (isPollerTimeout) {
+          title = '시간이 너무 오래 걸리고 있어요';
+          message = '빌드가 아직 완료되지 않았어요. GitHub Actions에서 진행 상황을 확인해 주세요.';
+          hint = 'GitHub Actions 상태를 확인해 주세요.';
+        } else if (isCancelled) {
+          message = '빌드가 취소됐어요. 동시에 다른 배포가 실행 중이었을 수 있어요.';
+          hint = '잠시 후 다시 시도해 주세요.';
+        } else if (isBuildTimeout) {
+          message = '빌드 시간이 초과됐어요. GitHub Actions 로그를 확인해 주세요.';
+        }
         setError({
-          title: r.timeoutReached ? '시간이 너무 오래 걸리고 있어요' : '배포에 실패했어요',
-          message: r.timeoutReached
-            ? '빌드가 아직 완료되지 않았어요. GitHub Actions에서 진행 상황을 확인해 주세요.'
-            : '게임 빌드에 실패했어요. 이전 버전은 그대로 유지됩니다.',
-          hint: r.timeoutReached
-            ? 'GitHub Actions 상태를 확인해 주세요.'
-            : '잠시 후 다시 시도해 주세요.',
+          title,
+          message,
+          hint,
           errorCode: r.errorCode,
+          htmlUrl: r.htmlUrl ?? undefined,
         });
       }
       try {

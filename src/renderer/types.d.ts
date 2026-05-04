@@ -38,6 +38,7 @@ export interface ElectronAPI {
         timeoutReached?: boolean;
         htmlUrl?: string | null;
         errorCode?: string;
+        conclusion?: string | null;
       }) => void,
     ) => Unsubscribe;
   };
