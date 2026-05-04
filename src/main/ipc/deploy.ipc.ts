@@ -14,6 +14,7 @@ import {
   findRunForCommit,
   getDefaultConfig,
   getRunStatus,
+  triggerRepositoryDispatch,
   uploadFiles,
 } from '../services/github.service';
 import { startPolling } from '../services/poller.service';
@@ -155,6 +156,17 @@ export function registerDeployIpc(): void {
           percent: 30,
           message: '파일 전송 완료',
         });
+      }
+
+      // The dosa repo's workflow only triggers on push to project/**, not
+      // assets/**, so a plain upload commit never starts a run. Fire a
+      // repository_dispatch (type the workflow already listens for) to
+      // guarantee the build runs after each asset upload.
+      try {
+        await triggerRepositoryDispatch(token, cfg, 'scenes-updated');
+      } catch {
+        // Non-fatal: if dispatch fails, polling will time out and the user
+        // will see a clear error. Don't block the upload result on this.
       }
 
       // Try to find the workflow run, then kick off polling

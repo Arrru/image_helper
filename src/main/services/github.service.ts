@@ -177,6 +177,24 @@ export async function uploadFiles(
 }
 
 /**
+ * Trigger a repository_dispatch event so workflows that don't match the push
+ * paths filter still run after an asset upload. The dosa repo's workflow
+ * listens for type 'scenes-updated', so we reuse that.
+ */
+export async function triggerRepositoryDispatch(
+  token: string,
+  cfg: GitHubConfig,
+  eventType: string,
+): Promise<void> {
+  const octokit = createClient(token);
+  await octokit.repos.createDispatchEvent({
+    owner: cfg.owner,
+    repo: cfg.repo,
+    event_type: eventType,
+  });
+}
+
+/**
  * Find the most recent workflow run associated with a commit SHA.
  */
 export async function findRunForCommit(
