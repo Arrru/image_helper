@@ -48,6 +48,7 @@ export function startPolling(options: {
   token: string;
   cfg: GitHubConfig;
   commitSha: string;
+  dispatchedAt: number;
   initialRunId: number | null;
   pagesUrl: string;
   onDone: (result: {
@@ -64,6 +65,7 @@ export function startPolling(options: {
     token,
     cfg,
     commitSha,
+    dispatchedAt,
     initialRunId,
     pagesUrl,
     onDone,
@@ -89,7 +91,7 @@ export function startPolling(options: {
 
     try {
       if (!runId) {
-        runId = await findRunForCommit(token, cfg, commitSha);
+        runId = await findRunForCommit(token, cfg, commitSha, dispatchedAt);
         if (!runId) {
           send(IPC.EVENT_DEPLOY_PROGRESS, {
             step: 'building',
@@ -97,7 +99,7 @@ export function startPolling(options: {
             message: '빌드 시작을 기다리는 중…',
           });
           if (attempt >= MAX_ATTEMPTS) {
-            finalize(false, null, null, true);
+            finalize(false, null, null, true, 'E008');
             return;
           }
           return;
@@ -109,17 +111,20 @@ export function startPolling(options: {
       send(IPC.EVENT_DEPLOY_PROGRESS, p);
 
       if (run.status === 'completed') {
-        finalize(run.conclusion === 'success', run.conclusion, run.htmlUrl, false);
+        const success = run.conclusion === 'success';
+        const errorCode =
+          !success && run.conclusion !== null ? 'E009' : undefined;
+        finalize(success, run.conclusion, run.htmlUrl, false, errorCode);
         return;
       }
 
       if (attempt >= MAX_ATTEMPTS) {
-        finalize(false, null, run.htmlUrl, true);
+        finalize(false, null, run.htmlUrl, true, 'E008');
       }
     } catch (err) {
       // Transient errors: keep polling until max attempts.
       if (attempt >= MAX_ATTEMPTS) {
-        finalize(false, null, null, true);
+        finalize(false, null, null, true, 'E008');
       }
     }
   };
@@ -129,6 +134,7 @@ export function startPolling(options: {
     conclusion: RunStatus['conclusion'],
     htmlUrl: string | null,
     timeoutReached: boolean,
+    errorCode?: string,
   ) => {
     if (task.cancelled) return;
     task.cancelled = true;
@@ -141,6 +147,7 @@ export function startPolling(options: {
       timestamp: new Date().toISOString(),
       timeoutReached,
       htmlUrl,
+      errorCode,
     });
 
     onDone({

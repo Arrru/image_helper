@@ -64,6 +64,7 @@ export interface DeployStartResult {
   runId: number | null;
   commitSha: string;
   error?: string;
+  errorCode?: string;
 }
 
 export interface DeployPollResult {
@@ -96,7 +97,20 @@ export interface AppError {
   title: string;
   message: string;
   hint: string;
+  errorCode?: string;
 }
+
+export const DEPLOY_ERROR = {
+  NO_FILES:         'E001',
+  NO_TOKEN:         'E002',
+  IMG_VALIDATION:   'E003',
+  SND_VALIDATION:   'E004',
+  IMG_UPLOAD:       'E005',
+  SND_UPLOAD:       'E006',
+  DISPATCH_FAIL:    'E007',
+  POLL_TIMEOUT:     'E008',
+  WORKFLOW_FAILED:  'E009',
+} as const;
 
 export interface RemoteFile {
   name: string;

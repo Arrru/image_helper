@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { IPC } from '../../shared/ipc-channels';
 import {
+  DEPLOY_ERROR,
   type DeployPollResult,
   type DeployStartResult,
   type DeploymentRecord,
@@ -14,7 +15,7 @@ import {
   findRunForCommit,
   getDefaultConfig,
   getRunStatus,
-  triggerRepositoryDispatch,
+  triggerDeploy,
   uploadFiles,
 } from '../services/github.service';
 import { startPolling } from '../services/poller.service';
@@ -45,6 +46,7 @@ export function registerDeployIpc(): void {
           runId: null,
           commitSha: '',
           error: '선택된 파일이 없어요.',
+          errorCode: DEPLOY_ERROR.NO_FILES,
         };
       }
 
@@ -54,6 +56,7 @@ export function registerDeployIpc(): void {
           runId: null,
           commitSha: '',
           error: 'GitHub 연결이 끊겼어요. 설정에서 토큰을 다시 확인해 주세요.',
+          errorCode: DEPLOY_ERROR.NO_TOKEN,
         };
       }
 
@@ -64,6 +67,7 @@ export function registerDeployIpc(): void {
             runId: null,
             commitSha: '',
             error: validation.errorMessage ?? '파일을 확인해 주세요.',
+            errorCode: DEPLOY_ERROR.IMG_VALIDATION,
           };
         }
       }
@@ -75,6 +79,7 @@ export function registerDeployIpc(): void {
             runId: null,
             commitSha: '',
             error: soundValidation.errorMessage ?? '사운드 파일을 확인해 주세요.',
+            errorCode: DEPLOY_ERROR.SND_VALIDATION,
           };
         }
       }
@@ -96,7 +101,7 @@ export function registerDeployIpc(): void {
         } else if (anyErr?.message) {
           msg = anyErr.message;
         }
-        return { runId: null, commitSha: '', error: msg };
+        return { runId: null, commitSha: '', error: msg, errorCode: DEPLOY_ERROR.IMG_UPLOAD };
       };
 
       // Upload image files
@@ -145,7 +150,8 @@ export function registerDeployIpc(): void {
           );
           commitSha = result.commitSha;
         } catch (err) {
-          return handleUploadError(err);
+          const r = handleUploadError(err);
+          return { ...r, errorCode: DEPLOY_ERROR.SND_UPLOAD };
         }
       }
 
@@ -159,18 +165,33 @@ export function registerDeployIpc(): void {
       }
 
       // The dosa repo's workflow only triggers on push to project/**, not
-      // assets/**, so a plain upload commit never starts a run. Fire a
-      // repository_dispatch (type the workflow already listens for) to
-      // guarantee the build runs after each asset upload.
+      // assets/**, so a plain upload commit never starts a run. Fire the
+      // deploy workflow (workflow_dispatch first, repository_dispatch
+      // fallback) to guarantee the build runs after each asset upload.
+      const dispatchedAt = Date.now();
+      let dispatchOk = false;
       try {
-        await triggerRepositoryDispatch(token, cfg, 'scenes-updated');
+        const dispatchRes = await triggerDeploy(token, cfg);
+        dispatchOk = dispatchRes.ok;
       } catch {
         // Non-fatal: if dispatch fails, polling will time out and the user
         // will see a clear error. Don't block the upload result on this.
       }
 
       // Try to find the workflow run, then kick off polling
-      const runId = await findRunForCommit(token, cfg, commitSha);
+      const runId = await findRunForCommit(token, cfg, commitSha, dispatchedAt);
+
+      // If both dispatch methods failed AND no run was found by head_sha,
+      // no workflow will ever start — fail fast with a diagnostic code so
+      // the user isn't left waiting 10 minutes for a timeout.
+      if (!dispatchOk && !runId) {
+        return {
+          runId: null,
+          commitSha,
+          error: '배포 워크플로우를 시작하지 못했어요. GitHub Actions 권한을 확인해 주세요.',
+          errorCode: DEPLOY_ERROR.DISPATCH_FAIL,
+        };
+      }
 
       if (win) {
         const key = `deploy-${commitSha}`;
@@ -184,6 +205,7 @@ export function registerDeployIpc(): void {
           token,
           cfg,
           commitSha,
+          dispatchedAt,
           initialRunId: runId,
           pagesUrl: PAGES_URL,
           onDone: async (result) => {

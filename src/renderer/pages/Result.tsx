@@ -98,6 +98,12 @@ export function Result({ onBack, onRetry }: Props) {
               문제가 계속되면 스크린샷을 찍어 개발팀에게 보내주세요.
             </p>
 
+            {errorDetail?.errorCode && (
+              <p className="text-xs text-text-secondary/60 text-center mt-2 font-mono">
+                오류 코드: {errorDetail.errorCode}
+              </p>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="button"

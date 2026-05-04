@@ -34,6 +34,7 @@ export function useDeployment() {
         title: '업로드에 실패했어요',
         message: result.error,
         hint: '잠시 후 다시 시도해 주세요. 문제가 계속되면 스크린샷을 찍어 개발팀에 보내주세요.',
+        errorCode: result.errorCode,
       };
       setError(err);
     }

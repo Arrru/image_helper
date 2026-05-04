@@ -50,6 +50,7 @@ const api = {
         timestamp: string;
         timeoutReached?: boolean;
         htmlUrl?: string | null;
+        errorCode?: string;
       }>,
     ) => on(IPC.EVENT_DEPLOY_COMPLETE, cb),
   },

@@ -177,30 +177,52 @@ export async function uploadFiles(
 }
 
 /**
- * Trigger a repository_dispatch event so workflows that don't match the push
- * paths filter still run after an asset upload. The dosa repo's workflow
- * listens for type 'scenes-updated', so we reuse that.
+ * Trigger the deploy workflow. Tries `workflow_dispatch` first (most reliable —
+ * directly targets `deploy.yml` by name), falls back to `repository_dispatch`
+ * (event type `scenes-updated`) if that fails. Returns which method succeeded
+ * so callers can surface diagnostics.
  */
-export async function triggerRepositoryDispatch(
+export async function triggerDeploy(
   token: string,
   cfg: GitHubConfig,
-  eventType: string,
-): Promise<void> {
+): Promise<{ ok: boolean; method?: string }> {
   const octokit = createClient(token);
-  await octokit.repos.createDispatchEvent({
-    owner: cfg.owner,
-    repo: cfg.repo,
-    event_type: eventType,
-  });
+  try {
+    await octokit.actions.createWorkflowDispatch({
+      owner: cfg.owner,
+      repo: cfg.repo,
+      workflow_id: 'deploy.yml',
+      ref: cfg.branch,
+    });
+    return { ok: true, method: 'workflow_dispatch' };
+  } catch {
+    // fall through to repository_dispatch
+  }
+  try {
+    await octokit.repos.createDispatchEvent({
+      owner: cfg.owner,
+      repo: cfg.repo,
+      event_type: 'scenes-updated',
+    });
+    return { ok: true, method: 'repository_dispatch' };
+  } catch {
+    return { ok: false };
+  }
 }
 
 /**
  * Find the most recent workflow run associated with a commit SHA.
+ *
+ * If the head_sha lookup returns nothing and `dispatchedAtMs` is provided,
+ * fall back to scanning recent workflow_dispatch / repository_dispatch runs
+ * created at or after `dispatchedAtMs - 30s` (covers dispatch-triggered runs
+ * that don't carry the upload commit's head_sha).
  */
 export async function findRunForCommit(
   token: string,
   cfg: GitHubConfig,
   commitSha: string,
+  dispatchedAtMs?: number,
 ): Promise<number | null> {
   const octokit = createClient(token);
   try {
@@ -211,12 +233,38 @@ export async function findRunForCommit(
       head_sha: commitSha,
     });
     const runs = res.data.workflow_runs;
-    if (runs.length === 0) return null;
-    // Most recent first
-    runs.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-    return runs[0].id;
+    if (runs.length > 0) {
+      // Most recent first
+      runs.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      return runs[0].id;
+    }
+
+    // head_sha returned nothing — try dispatch-event fallback
+    if (typeof dispatchedAtMs === 'number') {
+      const cutoff = dispatchedAtMs - 30_000;
+      for (const event of ['workflow_dispatch', 'repository_dispatch'] as const) {
+        try {
+          const r = await octokit.actions.listWorkflowRunsForRepo({
+            owner: cfg.owner,
+            repo: cfg.repo,
+            event,
+            per_page: 5,
+          });
+          const filtered = r.data.workflow_runs
+            .filter((w) => new Date(w.created_at).getTime() >= cutoff)
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+            );
+          if (filtered.length > 0) return filtered[0].id;
+        } catch {
+          // try next event type
+        }
+      }
+    }
+    return null;
   } catch {
     return null;
   }

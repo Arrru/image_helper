@@ -4,12 +4,14 @@
 
 import type {
   AppConfig,
+  DeleteRemoteFilesResult,
   DeploymentRecord,
   DeployPollResult,
   DeployProgress,
   DeployStartResult,
   DialogOpenFilesResult,
   FileInputPayload,
+  ListRemoteFilesResult,
   LoadTokenResult,
   SaveTokenResult,
   ValidateTokenResult,
@@ -25,7 +27,7 @@ export interface ElectronAPI {
     deleteToken: () => Promise<{ success: boolean }>;
   };
   deploy: {
-    start: (files: FileInputPayload[]) => Promise<DeployStartResult>;
+    start: (files: FileInputPayload[], soundFiles?: FileInputPayload[]) => Promise<DeployStartResult>;
     poll: (runId: number) => Promise<DeployPollResult>;
     onProgress: (cb: (p: DeployProgress) => void) => Unsubscribe;
     onComplete: (
@@ -35,6 +37,7 @@ export interface ElectronAPI {
         timestamp: string;
         timeoutReached?: boolean;
         htmlUrl?: string | null;
+        errorCode?: string;
       }) => void,
     ) => Unsubscribe;
   };
@@ -48,6 +51,7 @@ export interface ElectronAPI {
   };
   dialog: {
     openFiles: () => Promise<DialogOpenFilesResult>;
+    openSoundFiles: () => Promise<DialogOpenFilesResult>;
   };
   file: {
     readPreview: (
@@ -55,6 +59,10 @@ export interface ElectronAPI {
     ) => Promise<
       { dataUrl: string; size: number; name: string } | { error: string }
     >;
+  };
+  files: {
+    list: () => Promise<ListRemoteFilesResult>;
+    delete: (items: { path: string; sha: string }[]) => Promise<DeleteRemoteFilesResult>;
   };
   shell: {
     openExternal: (url: string) => Promise<{ success: boolean }>;

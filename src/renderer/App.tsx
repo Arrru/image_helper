@@ -53,6 +53,7 @@ export default function App() {
           hint: r.timeoutReached
             ? 'GitHub Actions 상태를 확인해 주세요.'
             : '잠시 후 다시 시도해 주세요.',
+          errorCode: r.errorCode,
         });
       }
       try {
