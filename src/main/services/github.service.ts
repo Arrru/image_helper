@@ -191,7 +191,7 @@ export async function triggerDeploy(
     await octokit.actions.createWorkflowDispatch({
       owner: cfg.owner,
       repo: cfg.repo,
-      workflow_id: 'deploy.yml',
+      workflow_id: 'web-export.yml',
       ref: cfg.branch,
     });
     return { ok: true, method: 'workflow_dispatch' };
